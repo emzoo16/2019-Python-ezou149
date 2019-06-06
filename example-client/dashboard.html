@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Cool Social Media Application </title>
+        <meta charset='utf-8'>
+        <meta http-equiv="refresh" content="60" >
+        <link rel = "stylesheet" href="static/style.css" >
+    </head>
+    <body>
+  
+    <div class=header>
+        <h1>Cool Social Media Application</h1>
+        <form action="/signout" method="post" enctype="multipart/form-data">
+            <input class="btn" type="submit" value="Sign out"></form>
+    </div>
+
+    <div class = "wrap">
+        <div class = "main-content">
+            <div class= "broadcast-box">
+                <form action="/check_broadcast" method="post" enctype="multipart/form-data" id="usrform">
+                    <div class="textbox">
+                        <textarea id="message" class="text" name="message" 
+                        placeholder="Post a public broadcast..."></textarea>
+                    </div>
+                    <div id= "broadcast-btn" >
+                        <input class="btn" type="submit" value="Send">
+                    </div>
+                </form>
+            </div>
+
+            <div class= "recent-broadcast-box">
+                <input type="text" id="input" onkeyup="myFunction()" placeholder="Search for broadcasts..">
+
+                <ul id="broadcastUL">
+                    {% for broadcast in recentbroadcasts %}
+                    <li class="broadcast"><a href="#">{{broadcast}}</a></li>
+                    {% endfor %}
+                </ul>
+
+                <script>
+                        function myFunction() {
+                        // Declare variables
+                        var input, filter, ul, li, a, i, txtValue;
+                        input = document.getElementById('input');
+                        filter = input.value.toUpperCase();
+                        ul = document.getElementById("broadcastUL");
+                        li = ul.getElementsByTagName('li');
+            
+                        // Loop through all list items, and hide those who don't match the search query
+                        for (i = 0; i < li.length; i++) {
+                            a = li[i].getElementsByTagName("a")[0];
+                            txtValue = a.textContent || a.innerText;
+                            if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                            li[i].style.display = "";
+                            } else {
+                            li[i].style.display = "none";
+                            }
+                        }
+                        }
+                </script>
+            </div>
+        </div>
+
+        <div class="sidebar">
+            <h1>{{username}}</h1>
+            <button class = "btn" onclick="location.href = 'privatemessage.html';">Private Message </button>
+
+            <div class = "online-user-box">
+                <h3>Online Users</h3>
+                <ul class = "online-users">
+                    {% for users in onlineusers %}
+                    <li class="user-item">{{users}}</li>
+                    {% endfor %}
+                </ul>
+            </div> 
+        </div>
+    
+    </div>
+    </body>
+
+</html>

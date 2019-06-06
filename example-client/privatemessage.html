@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title> Cool Social Media Application </title>
+        <link rel = "stylesheet" href="static/style-message.css" >
+    </head>
+    <body>
+  
+    <div class=header>
+        <h1>Cool Social Media Application</h1>
+    </div>
+
+    <div class = "wrap">
+           
+        <div class = "main-content-message">
+            <div class= "message-box">
+                <div class= username-message>
+                    <h3>Username : Online</h3>
+                </div>
+    
+            <div class= "messages-box" style="overflow-y: scroll">
+                <div class= "messages" >
+                    <ul class = "message-boxes" >
+                            <li class="user">oqwheouh aksdjnfa askdjfnlakjsnf sadknfkjn</li>
+                            <li class="user-darker">asduioqwuer asodijf aosidjfoiwqerq</li>
+                            <li class="user">asdfa qweourq lajsdfiuwoeir asodifuaosdf</li>
+                            <li class="user-darker">qwerquwepoirubasdjfklq qlwierh alskjdfh</li>
+                            <li class="user-darker">qwerquwepoirubasdjfklq qlwierh alskjdfh</li>
+                            <li class="user-darker">qwerquwepoirubasdjfklq qlwierh alskjdfh</li>
+                            <li class="user">asdfa qweourq lajsdfiuwoeir asodifuaosdf</li>
+                            <li class="user">asdfa qweourq lajsdfiuwoeir asodifuaosdf</li>
+                        <!---{% for users in onlineusers %}
+                        <li class="broadcast">{{users}}</li>
+                        {% endfor %} -->
+                    </ul>
+
+                </div>
+            </div>
+
+            <div class=send-message>
+                <form action="" method="post" enctype="multipart/form-data" id="usrform">
+                    <textarea class="textarea" class="text" cols="80" rows ="3" name="messageText" placeholder="Write a message..."></textarea>
+                    <input class="btn" type="submit" value="Send"></form>
+            </div>
+            </div>
+        </div>
+
+        <div class="sidebar-message" style="overflow-y: scroll">
+            <form><input class= "btn" type="submit" value="New Message"></form>
+           
+            <ul class = "past-messages">
+                    <li class="user">Message person 1</li>
+                    <li class="user">Message person 2</li>
+                    <li class="user">Message person 3</li>
+                    <li class="user">Message person 4</li>
+                    <li class="user">Message person 1</li>
+                    <li class="user">Message person 2</li>
+                    <li class="user">Message person 3</li>
+                    <li class="user">Message person 4</li>
+                    <li class="user">Message person 1</li>
+                    <li class="user">Message person 2</li>
+                    <li class="user">Message person 3</li>
+                    <li class="user">Message person 4</li>
+                <!---{% for users in onlineusers %}
+                <li class="broadcast">{{users}}</li>
+                {% endfor %} -->
+            </ul>
+    
+            </div>
+        </div>
+        <!-- .header 
+        <div class = "online-user-box">
+            <h1>Online Users</h1>
+            <ul class = "online-users">
+                {% for users in onlineusers %}
+                <li class="user-item">{{users}}</li>
+                {% endfor %}
+            </ul>
+        </div> -->
+    </div>
+    </body>
+
+</html>

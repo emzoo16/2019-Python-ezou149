@@ -11,6 +11,6 @@ response = urllib.request.urlopen(req)
 data = response.read() 
 encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
 response.close() #be a tidy kiwi
-JSON_object = json.loads(data.decode(encoding))
+JSON_object = json.loads(data.decode(encoding)) #converting the python object into JSON
 
 print(JSON_object)

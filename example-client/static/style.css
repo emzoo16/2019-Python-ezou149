@@ -1,0 +1,144 @@
+body{
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #F6F2EF;
+}
+
+.wrap {
+    width:85%;
+    margin:0 auto;
+    background:#3F3F3F;
+}
+
+.header {
+    height:10%;
+    width: 100%;
+    margin-bottom: 2%;
+    text-align: left;
+    background:#3F3F3F;
+    color: #DDDDDD;
+    font-size: 16px;
+    box-shadow: 0px 5px 10px #DDDDDD;
+  }
+
+.sidebar {
+    width:23%;
+    background-color:#FFFFFF;
+    float:left;
+    margin-left: 15px;
+    text-align: center;
+    box-shadow: 0px 0px 15px #DDDDDD;
+}
+
+.main-content {
+    width:73%;
+    height: 88%;
+    background-color: #F6F2EF;
+    float:right;
+    text-align: center;
+}
+
+.broadcast-box {
+    background-color: #ffffff;
+    margin-bottom: 50px;
+    font-size: 14px;
+    padding: 10px;
+    box-shadow: 0px 0px 15px #DDDDDD;
+}
+
+.broadcast-box .btn {
+    background-color: #3F3F3F;
+    color: #DDDDDD;
+    width: 110px;
+    height: 30px;
+    font-size: 14px;
+    margin-top: 15px;
+    margin-bottom: 10px;
+    margin-right: 50px;
+    border-color: #F6F2EF;
+}
+
+#message {
+    font-size: 18px;
+    width: 670px;
+    height: 80px;
+    margin-top: 20px;
+}
+#broadcast-btn {
+    text-align: right;
+}
+
+.recent-broadcast-box {
+    margin-bottom: 20px;
+    font-size: 14px;
+}
+
+.sidebar .btn {
+    background-color: #3F3F3F;
+    color: #DDDDDD;
+    width: 200px;
+    height: 50px;
+    font-size: 18px;
+    border-color: #F6F2EF;
+    margin-top: 30px;
+    margin-bottom: 30px;
+}
+
+.login-box {
+    padding: 20px;
+    background-color: #ffffff;
+    height: 300px;
+    width: 350px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 100px;
+    text-align: center;
+    box-shadow: 0px 0px 15px #DDDDDD;
+}
+
+
+.login-box input {
+    width: 300px;
+    height: 45px;
+    font-size: 16px;
+}
+
+.login-box .btn {
+    background-color: #3F3F3F;
+    color: #DDDDDD;
+    width: 200px;
+    height: 40px;
+    margin-top: 30px;
+}
+
+#broadcastUL .broadcast {
+    background-color: #ffffff;
+    height: 90px;
+    margin-bottom: 30px;
+    box-shadow: 0px 0px 15px #DDDDDD;
+    padding: 15px;
+}
+
+#broadcastUL li a {
+    text-decoration: none;
+    display: block;
+    color: black;
+}
+
+#broadcastUL {
+    list-style-type: none;
+    padding: 0;
+    margin: 0;
+}
+
+#input {
+    font-size: 16px; 
+    width: 350px;
+    padding: 12px 20px 12px 40px; 
+    border: 1px solid #ddd; 
+    margin-bottom: 25px; 
+}
+
+
+

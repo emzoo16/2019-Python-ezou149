@@ -1,0 +1,135 @@
+.header {
+    height:10%;
+    width: 100%;
+    text-align: left;
+    background:#3F3F3F;
+    color: #DDDDDD;
+    font-size: 16px;
+    box-shadow: 0px 5px 10px #DDDDDD;
+  }
+
+.message-header {
+    margin-top: 15px;
+    height:50px;
+    width: 100%;
+    background:#3F3F3F;
+    color:#ffffff
+}
+.message-header h1 {
+    padding: 5px;
+    font-size: 24px;
+}
+#new-message-btn {
+    background:#3F3F3F;
+    color: #DDDDDD;
+    width: 70px;
+    height: 30px;
+    font-size: 14px;
+}
+
+body{
+    margin: 0;
+    padding: 0;
+    font-family: sans-serif;
+    background-color: #F6F2EF;
+}
+
+.wrap {
+    width:85%;
+    margin:0 auto;
+}
+
+.messages-box {
+    background-color: #ffffff;
+    height: 72%;
+    box-shadow: 0px 0px 15px #DDDDDD;
+}
+
+.sidebar-message {
+    width: 26%;
+    height: 650px;;
+    background-color:#FFFFFF;
+    float:left;
+    text-align: center;
+    border-right: 1px solid #DDDDDD;
+    margin-top: 15px;
+}
+
+.username-message {
+    background-color:#dddddd;
+    color: #3F3F3F;
+    text-align: left;
+    height: 30px;
+    margin-bottom: 5px;
+    padding: 10px;
+}
+
+.main-content-message {
+    width:73%;
+    height: 80%;
+    background-color: #F6F2EF;
+    float:right;
+    text-align: center;
+    margin-top: 15px;
+}
+.past-messages .user{
+    background-color: #ffffff;
+    height: 65px;
+    border-bottom: 1px solid #dddddd;
+    border-top: 1px solid #dddddd;
+    margin-bottom: 5px;
+}
+.sidebar-message .btn {
+    background:#3F3F3F;
+    color: #DDDDDD;
+    margin-top: 40px;
+    margin-bottom: 20px;
+    width: 170px;
+    height: 40px;
+    font-size: 16px;
+}
+.past-messages {
+    padding: 0;
+    margin: 0;
+    list-style-type: none;
+}
+
+.message-boxes .user-darker {
+    background: #DDDDDD;
+    padding: 15px;
+    list-style-type: none;
+    box-shadow: 0px 0px 15px #DDDDDD;
+    margin-bottom: 20px;
+    margin-right: 120px;
+
+}
+
+.message-boxes .user {
+    background: #ffffff;
+    padding: 15px;
+    list-style-type: none;
+    box-shadow: 0px 0px 15px #DDDDDD;
+    margin-bottom: 20px;
+    margin-right: 25px;
+    margin-left: 95px;
+
+}
+
+.send-message .btn {
+    background-color: #3F3F3F;
+    color: #DDDDDD;
+    width: 70px;
+    height: 30px;
+    font-size: 14px;
+    float: right;
+   
+}
+
+.send-message .textarea {
+    font-size: 14px;
+}
+
+.user-item {
+    list-style: none;
+    margin-left: -25px;
+}
