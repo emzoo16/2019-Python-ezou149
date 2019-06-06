@@ -10,6 +10,7 @@ import nacl.utils
 from nacl.public import PrivateKey, SealedBox
 import time
 import serverFunctions
+import database
 
 username = "ezou149"
 password = "emzoo16_844010534"
@@ -31,48 +32,52 @@ headers = {
 Broadcast between users (public message)
 """
 def broadcast(message, signing_key, headers):
-    
-    url = "http://172.23.1.134:8080/api/rx_broadcast"
+    availableIPs = ping_all_online()
     certificate = serverFunctions.get_loginserver_record(headers)
     time_str = str(time.time())
 
-    message_bytes = bytes(certificate + message + time_str, encoding='utf-8')
-    signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
-    signature_hex_str = signed.signature.decode('utf-8')
+    for ip in availableIPs:
+        url = "http://"+ ip + "/api/rx_broadcast"
 
-    payload = {
-    "loginserver_record": certificate,  
-    "message": message,  
-    "sender_created_at" : time_str,  
-    "signature" : signature_hex_str
-    }
+        message_bytes = bytes(certificate + message + time_str, encoding='utf-8')
+        signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
+        signature_hex_str = signed.signature.decode('utf-8')
 
-    json_bytes = json.dumps(payload).encode('utf-8')
+        payload = {
+        "loginserver_record": certificate,  
+        "message": message,  
+        "sender_created_at" : time_str,  
+        "signature" : signature_hex_str
+        }
 
-    try:
-        req = urllib.request.Request(url, data=json_bytes, headers= headers)
-        response = urllib.request.urlopen(req)
-        data = response.read() # read the received bytes
-        encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
-        response.close()
-    except urllib.error.HTTPError as error:
-        print(error.read())
-        exit()
-    JSON_object = json.loads(data.decode(encoding))
-    print("recieved data")
-    print(JSON_object)
+        json_bytes = json.dumps(payload).encode('utf-8')
+
+        try:
+            req = urllib.request.Request(url, data=json_bytes, headers= headers)
+            response = urllib.request.urlopen(req)
+            data = response.read() # read the received bytes
+            encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
+            response.close()
+        except urllib.error.HTTPError as error:
+            print(error.read())
+            exit()
+        JSON_object = json.loads(data.decode(encoding))
+        print(JSON_object)
+    
 
 """
 Used for sending secret messages between users.
 """
-def privatemessage(message, signing_key, headers):
-    url = "http://cs302.kiwi.land/api/rx_privatemessage"
+def privatemessage(message, signing_key, headers, target_ip, target_user):
+    time_str = str(time.time())
+    database.add_message(target_user, username, message, time_str)
+    
+    url = "http://"+ target_ip + "/api/rx_privatemessage"
     certificate = serverFunctions.get_loginserver_record(headers)
     target_pubkey_str = serverFunctions.loginserver_pubkey()
     target_pubkey = nacl.signing.VerifyKey(target_pubkey_str, encoder=nacl.encoding.HexEncoder) 
     target_pubkey_curve = target_pubkey.to_curve25519_public_key()
 
-    time_str = str(time.time())
     sealed_box = nacl.public.SealedBox(target_pubkey_curve)
     encrypted = sealed_box.encrypt(bytes(message,encoding='utf-8'), encoder=nacl.encoding.HexEncoder)
     encrypted_str = encrypted.decode('utf-8')
@@ -108,8 +113,8 @@ def privatemessage(message, signing_key, headers):
 """
 Checks if another client is alive.
 """
-def ping_check():
-    url = "http://cs302.kiwi.land/api/ping_check"
+def ping_check(target_ip_address):
+    url = "http://" + target_ip_address + "/api/ping_check"
     time_str = str(time.time())
 
     payload = {
@@ -118,9 +123,7 @@ def ping_check():
     "connection_address": "172.23.1.134:8080",
     "connection_location": 2
     }
-
     json_bytes = json.dumps(payload).encode('utf-8')
-
     try:
         req = urllib.request.Request(url, data=json_bytes, headers= headers)
         response = urllib.request.urlopen(req)
@@ -131,7 +134,18 @@ def ping_check():
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
+    return JSON_object
+
+
+def ping_all_online():
+    availableIPs = []
+    userIPs = getUserIPs()
+    for ip in userIPs:
+        return_data = ping_check(ip)
+        if return_data["response"] == 'ok':
+            availableIPs.append(ip)
+    return availableIPs
+    
 
 """
 Transmit private group messages between users.
@@ -213,4 +227,16 @@ def checkmessages():
     JSON_object = json.loads(data.decode(encoding))
     print(JSON_object)
     return JSON_object;
+
+
+def getUserIPs():
+    userIPs = []
+    online_users = serverFunctions.list_users(headers)
+    users = online_users["users"]
+
+    for user in users:
+        userString = user["connection_address"] 
+        userIPs.append(userString)
+
+    return userIPs
 

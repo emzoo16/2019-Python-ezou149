@@ -6,20 +6,19 @@ Message table(sender,reciever, message, time)
 Broadcast table(sender,message, time)
 """
 
-conn = sqlite3.connect("database.db")
+def initialise_database():
+    print("initialised")
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
 
-c = conn.cursor()
+    c.execute("""CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY NOT NULL, 
+    password TEXT NOT NULL)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS broadcasts(sender TEXT NOT NULL, 
+    message TEXT NOT NULL, time TEXT NOT NULL)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS messages(reciever TEXT NOT NULL, sender TEXT NOT NULL, 
+    message TEXT NOT NULL, time TEXT NOT NULL)""")
+    c.close()
 
-c.execute("""CREATE TABLE IF NOT EXISTS users(username TEXT PRIMARY KEY NOT NULL, 
-password TEXT NOT NULL)""")
-
-c.execute("""CREATE TABLE IF NOT EXISTS broadcasts(sender TEXT NOT NULL, 
-message TEXT NOT NULL, time TEXT NOT NULL)""")
-
-c.execute("""CREATE TABLE IF NOT EXISTS messages(reciever TEXT NOT NULL, sender TEXT NOT NULL, 
-message TEXT NOT NULL, time TEXT NOT NULL)""")
-
-c.close()
 
 def add_broadcast(new_sender, new_message, new_time):
     conn = sqlite3.connect("database.db")
@@ -51,15 +50,17 @@ def add_message(new_reciever, new_sender, new_message, new_time):
     conn.commit()
     c.close()
 
-def get_message_usernames(signin_username):
+def get_message_usernames(username):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     return_usernames = []
     c.execute( """select distinct m.sender
-                  from messages m""")
+                  from messages m
+                  where m.sender <> '"""+ username + """'""")
     usernames = c.fetchall()
     c.close()
     for username in usernames:
+        print("username for message" + username[0])
         return_usernames.append(str(username[0]))
     return return_usernames
 
@@ -67,7 +68,7 @@ def get_messages_from(signin_username, sender_username):
     conn = sqlite3.connect("database.db")
     c = conn.cursor()
     return_messages = []
-    c.execute("""select distinct m.message, m.time
+    c.execute("""select distinct m.message, m.time, m.sender
                  from messages m
                  where (m.sender = ? and m.reciever = ?)
                  or (m.sender = ? and m.reciever = ?)
@@ -76,5 +77,6 @@ def get_messages_from(signin_username, sender_username):
     messages = c.fetchall()
     c.close()
     for message in messages:
-        return_messages.append(str(message[0]))
+        print(message[0] + " " + message[2])
+        return_messages.append(str(message[0] + " " + message[2]))
     return return_messages
