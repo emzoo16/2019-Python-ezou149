@@ -28,6 +28,7 @@ env=Environment(loader=FileSystemLoader(CUR_DIR), trim_blocks=True)
 username = "ezou149"
 password = "emzoo16_844010534"
 
+connection_location = 1
 #create HTTP BASIC authorization header
 credentials = ('%s:%s' % (username, password))
 b64_credentials = base64.b64encode(credentials.encode('ascii'))
@@ -96,12 +97,13 @@ class MainApp(object):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
         clientFunctions.broadcast(message, signing_key, headers)
         raise cherrypy.HTTPRedirect('/dashboard')
+    
 
     @cherrypy.expose
     def check_privatemessage(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
-        clientFunctions.privatemessage(message, signing_key, headers)
-        raise cherrypy.HTTPRedirect('/')
+        clientFunctions.privatemessage(message, signing_key, headers, pubkey_hex_str)
+        raise cherrypy.HTTPRedirect('/privatemessage.html')
 
     # LOGGING IN AND OUT
     @cherrypy.expose
@@ -133,6 +135,7 @@ def authoriseUserLogin(username = None, password = None):
     if (username.lower() == username) and (password.lower() == password):
         #Generate a public key
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
+        clientFunctions.ping_all_online()
         serverFunctions.report(pubkey_hex_str,headers,"online")
         serverFunctions.get_loginserver_record(headers)
         #serverFunctions.add_privatedata("Hello",headers,signing_key, "1234")
@@ -171,6 +174,7 @@ class ApiApp(object):
     @cherrypy.tools.json_out()
     @cherrypy.tools.json_in()
     def rx_privatemessage(self):
+        print("privatemessage api called")
         target_username = cherrypy.request.json["target_username"]
         target_pubkey = cherrypy.request.json["target_pubkey"]
 
@@ -198,5 +202,5 @@ class ApiApp(object):
         #Store recieved information in a list?
         return_body = { "response": "ok",
                         "my_time": time_str,
-                        "my_active_usernames": [username]}
+                        "my_active_usernames": username}
         return return_body

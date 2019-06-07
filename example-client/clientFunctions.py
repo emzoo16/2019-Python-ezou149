@@ -33,48 +33,50 @@ Broadcast between users (public message)
 """
 def broadcast(message, signing_key, headers):
     availableIPs = ping_all_online()
+
     certificate = serverFunctions.get_loginserver_record(headers)
     time_str = str(time.time())
+    message_bytes = bytes(certificate + message + time_str, encoding='utf-8')
+    signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
+    signature_hex_str = signed.signature.decode('utf-8')
+
+    payload = {
+    "loginserver_record": certificate,  
+    "message": message,  
+    "sender_created_at" : time_str,  
+    "signature" : signature_hex_str
+    }
+
+    json_bytes = json.dumps(payload).encode('utf-8')
 
     for ip in availableIPs:
-        url = "http://"+ ip + "/api/rx_broadcast"
-
-        message_bytes = bytes(certificate + message + time_str, encoding='utf-8')
-        signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
-        signature_hex_str = signed.signature.decode('utf-8')
-
-        payload = {
-        "loginserver_record": certificate,  
-        "message": message,  
-        "sender_created_at" : time_str,  
-        "signature" : signature_hex_str
-        }
-
-        json_bytes = json.dumps(payload).encode('utf-8')
-
+        url = "http://" + ip +"/api/ping_check"
         try:
             req = urllib.request.Request(url, data=json_bytes, headers= headers)
-            response = urllib.request.urlopen(req)
+            response = urllib.request.urlopen(req,timeout=1)
+            
             data = response.read() # read the received bytes
             encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
             response.close()
+        
         except urllib.error.HTTPError as error:
             print(error.read())
-            exit()
-        JSON_object = json.loads(data.decode(encoding))
-        print(JSON_object)
-    
+        except urllib.error.URLError as error:
+            print("URL error here")
+        except ConnectionResetError as error:
+            print("connection reset error")
+        
+            #return 'error'
+        #JSON_object = json.loads(data.decode(encoding))
 
-"""
-Used for sending secret messages between users.
-"""
-def privatemessage(message, signing_key, headers, target_ip, target_user):
+
+def privatemessage(message, signing_key, headers, target_pubkey_str, ):
     time_str = str(time.time())
-    database.add_message(target_user, username, message, time_str)
+    database.add_message("ezou149", "ezou149", message, time_str)
     
-    url = "http://"+ target_ip + "/api/rx_privatemessage"
+    url = "http://172.23.1.134:8080/api/rx_privatemessage"
     certificate = serverFunctions.get_loginserver_record(headers)
-    target_pubkey_str = serverFunctions.loginserver_pubkey()
+
     target_pubkey = nacl.signing.VerifyKey(target_pubkey_str, encoder=nacl.encoding.HexEncoder) 
     target_pubkey_curve = target_pubkey.to_curve25519_public_key()
 
@@ -84,13 +86,14 @@ def privatemessage(message, signing_key, headers, target_ip, target_user):
 
     message_bytes = bytes(certificate + target_pubkey_str + "admin" + encrypted_str 
     + time_str, encoding='utf-8')
+
     signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
     signature_hex_str = signed.signature.decode('utf-8')
 
     payload = {
     "loginserver_record": certificate, 
     "target_pubkey": target_pubkey_str, 
-    "target_username": "admin", 
+    "target_username": "ezou149", 
     "encrypted_message": encrypted_str,
     "sender_created_at" : time_str, 
     "signature" : signature_hex_str
@@ -114,27 +117,37 @@ def privatemessage(message, signing_key, headers, target_ip, target_user):
 Checks if another client is alive.
 """
 def ping_check(target_ip_address):
-    url = "http://" + target_ip_address + "/api/ping_check"
+    print("ping checking: " + target_ip_address)
+    url = "http://"+ target_ip_address+ "/api/ping_check"
     time_str = str(time.time())
 
     payload = {
     "my_time": time_str,
-    "my_active_usernames": [username],
+    "my_active_usernames": username,
     "connection_address": "172.23.1.134:8080",
     "connection_location": 2
     }
+
     json_bytes = json.dumps(payload).encode('utf-8')
     try:
         req = urllib.request.Request(url, data=json_bytes, headers= headers)
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req,timeout=1)
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
+        JSON_object = json.loads(data.decode(encoding))
+        response = JSON_object["response"]
+        if(response == "error"):
+            raise urllib.error.URLError
+        return JSON_object
     except urllib.error.HTTPError as error:
         print(error.read())
-        exit()
-    JSON_object = json.loads(data.decode(encoding))
-    return JSON_object
+        return {"response : error here"}
+    except urllib.error.URLError as error:
+        print("response : URL error here")
+        return {"response : URL error here"}
+    except ConnectionResetError as error:
+            print("connection reset error")
 
 
 def ping_all_online():
@@ -142,8 +155,9 @@ def ping_all_online():
     userIPs = getUserIPs()
     for ip in userIPs:
         return_data = ping_check(ip)
-        if return_data["response"] == 'ok':
+        if(return_data != "error here"):
             availableIPs.append(ip)
+            print("this ip is okay: " + ip )
     return availableIPs
     
 

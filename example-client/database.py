@@ -17,6 +17,8 @@ def initialise_database():
     message TEXT NOT NULL, time TEXT NOT NULL)""")
     c.execute("""CREATE TABLE IF NOT EXISTS messages(reciever TEXT NOT NULL, sender TEXT NOT NULL, 
     message TEXT NOT NULL, time TEXT NOT NULL)""")
+    c.execute("""CREATE TABLE IF NOT EXISTS user_details(user TEXT PRIMARY KEY, pubkey TEXT NOT NULL, 
+    ip_address TEXT NOT NULL)""")
     c.close()
 
 
@@ -39,7 +41,6 @@ def get_all_broadcasts():
     c.close()
     for broadcast in broadcasts:
         return_broadcasts.append("Sender:" + str(broadcast[0]) + "Message: "+ str(broadcast[1]))
-    print("return_broadcasts: " + str(return_broadcasts))
     return return_broadcasts
 
 def add_message(new_reciever, new_sender, new_message, new_time):
@@ -60,7 +61,6 @@ def get_message_usernames(username):
     usernames = c.fetchall()
     c.close()
     for username in usernames:
-        print("username for message" + username[0])
         return_usernames.append(str(username[0]))
     return return_usernames
 
@@ -77,6 +77,13 @@ def get_messages_from(signin_username, sender_username):
     messages = c.fetchall()
     c.close()
     for message in messages:
-        print(message[0] + " " + message[2])
         return_messages.append(str(message[0] + " " + message[2]))
     return return_messages
+
+def update_user_list(user, pubkey, ip_address):
+    conn = sqlite3.connect("database.db")
+    c = conn.cursor()
+    c.execute("replace into user_details (user , pubkey , ip_address) values ('" + user + "','" + 
+    pubkey +"','" + ip_address + "')")
+    conn.commit()
+    c.close()

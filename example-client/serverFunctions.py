@@ -7,7 +7,7 @@ import nacl.pwhash
 import nacl.secret
 import nacl.utils
 import time
-
+import database
 
 """----------------------------------------------------------------------------------
                                 POST METHODS
@@ -40,8 +40,6 @@ def ping (pubkey_hex_str, signing_key, headers):
         exit()
 
     JSON_object = json.loads(data.decode(encoding))
-    print("ping")
-    print(JSON_object)
 
 """
 Associates a new public key with your account.
@@ -71,7 +69,6 @@ def add_pubkey(pubkey_hex_str, signing_key, username, headers):
         exit()
 
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
     certificate = JSON_object["loginserver_record"]
     return certificate
 
@@ -109,7 +106,7 @@ def add_privatedata(privatedata, headers, signing_key, password):
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
+
 
 """
 Informs server about connection for a user. ie public key,status (online,offline)
@@ -135,8 +132,7 @@ def report(pubkey_hex_str, headers, status):
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print("report")
-    print(JSON_object)
+   
 
 """----------------------------------------------------------------------------------
                                   GET METHODS
@@ -157,7 +153,6 @@ def get_loginserver_record(headers):
         exit()
     JSON_object = json.loads(data.decode(encoding))
     certificate = JSON_object["loginserver_record"]
-    print("\n certificate" + certificate)
     return certificate
 
 """
@@ -194,7 +189,6 @@ def load_new_apikey():
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
     return JSON_object
 
 """
@@ -213,7 +207,7 @@ def list_users(headers):
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
+    update_database_users(JSON_object)
     return JSON_object
 
 """
@@ -231,7 +225,6 @@ def check_pubkey(string, headers):
         print(error.read())
         exit()
     JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
     return JSON_object
 
 """
@@ -253,7 +246,6 @@ def get_privatedata(headers,signing_key):
     JSON_object = json.loads(data.decode(encoding))
     privatedata_encrypted = JSON_object["privatedata"]
     privatedata_str = decrypt_privatedata(privatedata_encrypted,"1234",signing_key)
-    print(privatedata_str)
     return JSON_object
 
 """----------------------------------------------------------------------------------
@@ -279,7 +271,6 @@ def decrypt_privatedata(encrypted_privatedata,password,signing_key):
 
 
 def create_secret_box(password):
-    print("Creating a secret box")
     key_password = bytes(password, 'utf-8')
 
     salt = key_password
@@ -288,7 +279,6 @@ def create_secret_box(password):
 
     while len(salt)>16:
         salt = salt[:-1]
-    print(len(salt))
 
     symmetric_key = nacl.pwhash.argon2i.kdf(32, key_password, salt, opslimit=8, 
     memlimit=536870912, encoder=nacl.encoding.RawEncoder)
@@ -296,6 +286,14 @@ def create_secret_box(password):
     #key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
     box = nacl.secret.SecretBox(symmetric_key)
     return box
+
+def update_database_users(dict):
+    for user in dict["users"]:
+        username = user["username"] 
+        pubkey = user["incoming_pubkey"]
+        ip_address = user["connection_address"]
+        database.update_user_list(username,pubkey,ip_address)
+
 
 
 
