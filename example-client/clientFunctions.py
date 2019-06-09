@@ -11,6 +11,7 @@ from nacl.public import PrivateKey, SealedBox
 import time
 import serverFunctions
 import database
+import socket
 
 username = "ezou149"
 password = "emzoo16_844010534"
@@ -32,7 +33,7 @@ headers = {
 Broadcast between users (public message)
 """
 def broadcast(message, signing_key, headers):
-    availableIPs = ping_all_online()
+    #availableIPs = ping_all_online()
 
     certificate = serverFunctions.get_loginserver_record(headers)
     time_str = str(time.time())
@@ -47,24 +48,34 @@ def broadcast(message, signing_key, headers):
     "signature" : signature_hex_str
     }
 
+    print("all ips")
+    for ip in getUserIPs():
+        print(ip)
     json_bytes = json.dumps(payload).encode('utf-8')
-
-    for ip in availableIPs:
-        url = "http://" + ip +"/api/ping_check"
+   
+    for ip in getUserIPs():
+        print("broadcasting: " + ip)
+        url = "http://" + ip +"/api/rx_broadcast"
         try:
             req = urllib.request.Request(url, data=json_bytes, headers= headers)
             response = urllib.request.urlopen(req,timeout=1)
-            
             data = response.read() # read the received bytes
             encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
             response.close()
-        
+            JSON_object = json.loads(data.decode(encoding))
+            print(JSON_object)
         except urllib.error.HTTPError as error:
             print(error.read())
+            
         except urllib.error.URLError as error:
-            print("URL error here")
+            print("response : URL error here")
+            
         except ConnectionResetError as error:
             print("connection reset error")
+        except OSError as error:
+            print("socket connection reset error")
+        except socket.timeout as error:
+            print("timed out")
         
             #return 'error'
         #JSON_object = json.loads(data.decode(encoding))
@@ -136,7 +147,7 @@ def ping_check(target_ip_address):
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
         JSON_object = json.loads(data.decode(encoding))
-        response = JSON_object["response"]
+        print(JSON_object)
         if(response == "error"):
             raise urllib.error.URLError
         return JSON_object
@@ -146,9 +157,13 @@ def ping_check(target_ip_address):
     except urllib.error.URLError as error:
         print("response : URL error here")
         return {"response : URL error here"}
-    except ConnectionResetError as error:
-            print("connection reset error")
-
+    except ConnectionResetError:
+        print("connection reset error")
+    except OSError as error:
+        print("socket connection reset error")
+    except socket.timeout as error:
+        print("timed out")
+   
 
 def ping_all_online():
     availableIPs = []

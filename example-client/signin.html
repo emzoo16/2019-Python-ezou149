@@ -9,13 +9,16 @@
         </div>
         
         <div class = "login-box">
+            {% if error == "1" %}
+            <p id= error-message >Incorrent credentials. Please try again</p>
+            {% endif %}
             <form action="/signin" method="post" enctype="multipart/form-data">
             <h1>Login</h1>
             <div class="textbox">
-                <input type = "text" placeholder = "Username" name="username" value="">
+                <input type = "text" placeholder = "Username" name="username_given" id="username_given" value="">
             </div>
             <div class="textbox">
-                <input type = "text" placeholder = "Password" name="password" value="">
+                <input type = "text" placeholder = "Password" name="password_given" id="password_given" value="">
             </div>
             <input class="btn" type="submit" value="Sign in">
         </form>

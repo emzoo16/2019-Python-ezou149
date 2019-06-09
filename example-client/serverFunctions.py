@@ -115,7 +115,7 @@ def report(pubkey_hex_str, headers, status):
     url = "http://cs302.kiwi.land/api/report"
 
     payload = {
-    "connection_address": "172.23.1.134:8080",
+    "connection_address": "172.23.27.128:8080",
     "connection_location": 2,
     "incoming_pubkey": pubkey_hex_str,
     "status": status

@@ -55,7 +55,7 @@ def get_lan_ip():
 get_lan_ip()
 
 # The address we listen for connections on
-LISTEN_IP = "172.23.1.134"
+LISTEN_IP = get_lan_ip()
 LISTEN_PORT = 8080
 
 def runMainApp():

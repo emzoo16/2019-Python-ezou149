@@ -64,9 +64,9 @@ class MainApp(object):
         return template.render()
        
     @cherrypy.expose
-    def login(self, bad_attempt = 0):
+    def login(self, bad_attempt = "0"):
         template = env.get_template('signin.html')
-        return template.render()
+        return template.render(error = bad_attempt)
 
     @cherrypy.expose
     def dashboard(self):
@@ -76,7 +76,7 @@ class MainApp(object):
         broadcasts = database.get_all_broadcasts()
         return template.render(onlineusers = getUsers(), username = username, 
         recentbroadcasts = broadcasts)
-
+    """
     @cherrypy.expose
     def privateMessage(self):
         onlineusers_database = database.get_message_usernames(username)
@@ -91,25 +91,25 @@ class MainApp(object):
         past_messages_database = database.get_messages_from(username,sender_username)
         template = env.get_template('privatemessage.html')
         return template.render(onlineusers = onlineusers_database, pastmessages = past_messages_database)
-
+"""
     @cherrypy.expose
     def check_broadcast(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
         clientFunctions.broadcast(message, signing_key, headers)
         raise cherrypy.HTTPRedirect('/dashboard')
     
-
+    """
     @cherrypy.expose
     def check_privatemessage(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
         clientFunctions.privatemessage(message, signing_key, headers, pubkey_hex_str)
-        raise cherrypy.HTTPRedirect('/privatemessage.html')
+        raise cherrypy.HTTPRedirect('/privatemessage.html')"""
 
     # LOGGING IN AND OUT
     @cherrypy.expose
-    def signin(self, username=None, password=None):
+    def signin(self, username_given=None, password_given=None):
         """Check their name and password and send them either to the main page, or back to the main login screen."""
-        error = authoriseUserLogin(username, password)
+        error = authoriseUserLogin(username_given, password_given)
         if error == 0:
             cherrypy.session['username'] = username
             raise cherrypy.HTTPRedirect('/dashboard')
@@ -130,12 +130,12 @@ class MainApp(object):
 ###
 ### Functions only after here
 ###
-def authoriseUserLogin(username = None, password = None):
+def authoriseUserLogin(username_given = None, password_given = None):
     print("Log on attempt from {0}:{1}".format(username, password))
-    if (username.lower() == username) and (password.lower() == password):
+    if (username.lower() == username_given) and (password.lower() == password_given):
         #Generate a public key
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
-        clientFunctions.ping_all_online()
+        #clientFunctions.ping_all_online()
         serverFunctions.report(pubkey_hex_str,headers,"online")
         serverFunctions.get_loginserver_record(headers)
         #serverFunctions.add_privatedata("Hello",headers,signing_key, "1234")
