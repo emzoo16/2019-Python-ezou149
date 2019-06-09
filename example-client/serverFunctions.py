@@ -8,6 +8,7 @@ import nacl.secret
 import nacl.utils
 import time
 import database
+import server
 
 """----------------------------------------------------------------------------------
                                 POST METHODS
@@ -113,9 +114,10 @@ Informs server about connection for a user. ie public key,status (online,offline
 """
 def report(pubkey_hex_str, headers, status):
     url = "http://cs302.kiwi.land/api/report"
+    server.get_lan_ip()
 
     payload = {
-    "connection_address": "172.23.27.128:8080",
+    "connection_address": server.get_lan_ip() + ":8080",
     "connection_location": 2,
     "incoming_pubkey": pubkey_hex_str,
     "status": status

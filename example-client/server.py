@@ -10,6 +10,7 @@ import clientFunctions
 import os
 import sched
 import database
+import socket
 from jinja2 import Environment, FileSystemLoader
 from nacl.public import PrivateKey, SealedBox
 
@@ -135,7 +136,6 @@ def authoriseUserLogin(username_given = None, password_given = None):
     if (username.lower() == username_given) and (password.lower() == password_given):
         #Generate a public key
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
-        #clientFunctions.ping_all_online()
         serverFunctions.report(pubkey_hex_str,headers,"online")
         serverFunctions.get_loginserver_record(headers)
         #serverFunctions.add_privatedata("Hello",headers,signing_key, "1234")
@@ -155,6 +155,34 @@ def getUsers():
         userString = user["username"] + " : " + user["status"] 
         formattedUsers.append(userString)
     return formattedUsers
+
+def get_interface_ip(ifname):
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
+                            ifname[:15]))[20:24])
+
+def get_lan_ip():
+    ip = socket.gethostbyname(socket.gethostname())
+    if ip.startswith("127.") and os.name != "nt":
+        interfaces = [
+            "eth0",
+            "eth1",
+            "eth2",
+            "wlan0",
+            "wlan1",
+            "wifi0",
+            "ath0",
+            "ath1",
+            "ppp0",
+            ]
+        for ifname in interfaces:
+            try:
+                ip = get_interface_ip(ifname)
+                break
+            except IOError:
+                pass
+    print(ip)
+    return ip
 
 class ApiApp(object):
 
