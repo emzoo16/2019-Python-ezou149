@@ -15,11 +15,14 @@
 
     <div class = "wrap">
            
-        <div class = "main-content-message">
+        <div class = "main-content-message" style = "overflow-y: scroll">
             <div class= "message-box">
                 <div class= username-message>
                     <h3 id= "currentuser" name= "currentuser"> {{currentuser}}</h3>
                 </div>
+            {% if error == "1" %}
+            <p id= error-message >Error: could not send message</p>
+            {% endif %}
     
             <div class= "messages-box">
                 <div class= "messages" style="overflow-y: scroll" >
