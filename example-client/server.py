@@ -13,6 +13,11 @@ import database
 import socket
 from jinja2 import Environment, FileSystemLoader
 from nacl.public import PrivateKey, SealedBox
+import os
+
+if os.name != "nt":
+    import fcntl
+    import struct
 
 
 startHTML = "<html><head><title>CS302 example</title><link rel='stylesheet' href='/static/style.css' /></head><body>"
@@ -39,7 +44,8 @@ headers = {
     'Content-Type' : 'application/json; charset=utf-8',
 }
 
-s = sched.scheduler(time.time, time.sleep)
+current_onlineusers = None
+current_selected_user = None
 
 class MainApp(object):
 
@@ -77,34 +83,41 @@ class MainApp(object):
         broadcasts = database.get_all_broadcasts()
         return template.render(onlineusers = getUsers(), username = username, 
         recentbroadcasts = broadcasts)
-    """
-    @cherrypy.expose
-    def privateMessage(self):
-        onlineusers_database = database.get_message_usernames(username)
-        past_messages_database = database.get_messages_from(username,"jzhe142")
-        template = env.get_template('privatemessage.html')
-        return template.render(onlineusers = onlineusers_database, pastmessages = past_messages_database)
     
     @cherrypy.expose
-    def changeMessagePage(self, sender_username):
-        print(sender_username)
-        onlineusers_database = database.get_message_usernames(username)
-        past_messages_database = database.get_messages_from(username,sender_username)
+    def changeMessagePage(self, sender_username = None):
+        global current_selected_user
+        current_selected_user = sender_username
+
         template = env.get_template('privatemessage.html')
-        return template.render(onlineusers = onlineusers_database, pastmessages = past_messages_database)
-"""
+        if sender_username != None:
+            past_messages_database = database.get_messages_from(username,sender_username)
+            return template.render(onlineusers = current_onlineusers, 
+            pastmessages = past_messages_database, currentuser = sender_username)
+        else:
+            return template.render(onlineusers = clientFunctions.get_onlineusernames(headers), 
+            pastmessages = "")
+
+    @cherrypy.expose
+    def privateMessage(self):
+        global current_onlineusers
+        current_onlineusers = clientFunctions.get_onlineusernames(headers)
+
+        template = env.get_template('privatemessage.html')
+        return template.render(onlineusers = current_onlineusers, 
+            pastmessages = "")
+
     @cherrypy.expose
     def check_broadcast(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
         clientFunctions.broadcast(message, signing_key, headers)
         raise cherrypy.HTTPRedirect('/dashboard')
     
-    """
     @cherrypy.expose
     def check_privatemessage(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
-        clientFunctions.privatemessage(message, signing_key, headers, pubkey_hex_str)
-        raise cherrypy.HTTPRedirect('/privatemessage.html')"""
+        clientFunctions.privatemessage(message, signing_key, headers, current_selected_user)
+        raise cherrypy.HTTPRedirect('/privatemessage.html')
 
     # LOGGING IN AND OUT
     @cherrypy.expose
@@ -183,6 +196,9 @@ def get_lan_ip():
                 pass
     print(ip)
     return ip
+
+def get_currentusername():
+    return current_selected_user
 
 class ApiApp(object):
 

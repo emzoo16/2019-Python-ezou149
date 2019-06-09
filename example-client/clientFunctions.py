@@ -11,7 +11,14 @@ from nacl.public import PrivateKey, SealedBox
 import time
 import serverFunctions
 import database
+import server
 import socket
+import os
+
+if os.name != "nt":
+    import fcntl
+    import struct
+    
 
 username = "ezou149"
 password = "emzoo16_844010534"
@@ -58,7 +65,7 @@ def broadcast(message, signing_key, headers):
         url = "http://" + ip +"/api/rx_broadcast"
         try:
             req = urllib.request.Request(url, data=json_bytes, headers= headers)
-            response = urllib.request.urlopen(req,timeout=1)
+            response = urllib.request.urlopen(req,timeout=2)
             data = response.read() # read the received bytes
             encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
             response.close()
@@ -66,10 +73,8 @@ def broadcast(message, signing_key, headers):
             print(JSON_object)
         except urllib.error.HTTPError as error:
             print(error.read())
-            
         except urllib.error.URLError as error:
             print("response : URL error here")
-            
         except ConnectionResetError as error:
             print("connection reset error")
         except OSError as error:
@@ -80,12 +85,14 @@ def broadcast(message, signing_key, headers):
             #return 'error'
         #JSON_object = json.loads(data.decode(encoding))
 
-
-def privatemessage(message, signing_key, headers, target_pubkey_str, ):
+def privatemessage(message, signing_key, headers, target_username):
     time_str = str(time.time())
-    database.add_message("ezou149", "ezou149", message, time_str)
+    target_ip = get_ip_from_username(target_username,headers)
+    target_pubkey_str = get_pubkey_from_username(target_username,headers)
     
-    url = "http://172.23.1.134:8080/api/rx_privatemessage"
+    database.add_message(server.get_currentusername(), target_username, message, time_str)
+    
+    url = "http://"+ target_ip +"/api/rx_privatemessage"
     certificate = serverFunctions.get_loginserver_record(headers)
 
     target_pubkey = nacl.signing.VerifyKey(target_pubkey_str, encoder=nacl.encoding.HexEncoder) 
@@ -104,7 +111,7 @@ def privatemessage(message, signing_key, headers, target_pubkey_str, ):
     payload = {
     "loginserver_record": certificate, 
     "target_pubkey": target_pubkey_str, 
-    "target_username": "ezou149", 
+    "target_username": target_username, 
     "encrypted_message": encrypted_str,
     "sender_created_at" : time_str, 
     "signature" : signature_hex_str
@@ -114,13 +121,18 @@ def privatemessage(message, signing_key, headers, target_pubkey_str, ):
 
     try:
         req = urllib.request.Request(url, data=json_bytes, headers= headers)
-        response = urllib.request.urlopen(req)
+        response = urllib.request.urlopen(req, timeout=2)
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
     except urllib.error.HTTPError as error:
         print(error.read())
-        exit()
+    except ConnectionResetError:
+        print("connection reset error")
+    except OSError as error:
+        print("socket connection reset error")
+    except socket.timeout as error:
+        print("timed out")
     JSON_object = json.loads(data.decode(encoding))
     print(JSON_object)
 
@@ -142,14 +154,12 @@ def ping_check(target_ip_address):
     json_bytes = json.dumps(payload).encode('utf-8')
     try:
         req = urllib.request.Request(url, data=json_bytes, headers= headers)
-        response = urllib.request.urlopen(req,timeout=1)
+        response = urllib.request.urlopen(req,timeout=2)
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
         JSON_object = json.loads(data.decode(encoding))
         print(JSON_object)
-        if(response == "error"):
-            raise urllib.error.URLError
         return JSON_object
     except urllib.error.HTTPError as error:
         print(error.read())
@@ -157,7 +167,7 @@ def ping_check(target_ip_address):
     except urllib.error.URLError as error:
         print("response : URL error here")
         return {"response : URL error here"}
-    except ConnectionResetError:
+    except ConnectionResetError as error:
         print("connection reset error")
     except OSError as error:
         print("socket connection reset error")
@@ -165,7 +175,7 @@ def ping_check(target_ip_address):
         print("timed out")
    
 
-def ping_all_online():
+def ping_all_online(headers):
     availableIPs = []
     userIPs = getUserIPs()
     for ip in userIPs:
@@ -201,6 +211,12 @@ def groupmessage():
     except urllib.error.HTTPError as error:
         print(error.read())
         exit()
+    except ConnectionResetError:
+        print("connection reset error")
+    except OSError as error:
+        print("socket connection reset error")
+    except socket.timeout as error:
+        print("timed out")
     JSON_object = json.loads(data.decode(encoding))
     print(JSON_object)
 
@@ -268,4 +284,46 @@ def getUserIPs():
         userIPs.append(userString)
 
     return userIPs
+
+def get_ip_from_username(target_username,headers):
+    online_users = serverFunctions.list_users(headers)
+    users = online_users["users"]
+    
+    for user in users:
+        current_user = user["username"] 
+        if(current_user == target_username ):
+            info = user["connection_address"]
+            print("\n" + str(user["connection_address"]))
+            return info
+
+def get_pubkey_from_username(target_username,headers):
+    online_users = serverFunctions.list_users(headers)
+    users = online_users["users"]
+    
+    for user in users:
+        current_user = user["username"] 
+        if(current_user == target_username ):
+            info = user["incoming_pubkey"]
+            print("\n"+str(user["incoming_pubkey"]))
+            return info
+
+def get_onlineusernames(headers):
+    #ping_check all users online and get IPs that are successful
+    availableIPs = ping_all_online(headers)
+    print(len(availableIPs))
+    online_users = serverFunctions.list_users(headers)
+
+    formattedUsers = []
+    users = online_users["users"]
+    print(len(users))
+
+    #For all the users that are online, loop through the users that are online and check if their
+    #ip address available
+    for user in users:
+        #for ip in availableIPs:
+            #if user["connection_address"] == ip:
+        userString = user["username"]
+        formattedUsers.append(userString)
+
+    return formattedUsers
 
