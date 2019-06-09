@@ -10,9 +10,6 @@ import time
 import database
 import server
 
-if os.name != "nt":
-    import fcntl
-    import struct
     
 """----------------------------------------------------------------------------------
                                 POST METHODS

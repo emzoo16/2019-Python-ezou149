@@ -21,14 +21,13 @@
                     <h3 id= "currentuser" name= "currentuser"> {{currentuser}}</h3>
                 </div>
     
-            <div class= "messages-box" style="overflow-y: scroll">
-                <div class= "messages" >
+            <div class= "messages-box">
+                <div class= "messages" style="overflow-y: scroll" >
                     <ul class = "message-boxes" >
                     {% for message in pastmessages %}
                     <li class="user">{{message}}</li>
                     {% endfor %}  
                     </ul>
-
                 </div>
             </div>
 

@@ -13,12 +13,6 @@ import serverFunctions
 import database
 import server
 import socket
-import os
-
-if os.name != "nt":
-    import fcntl
-    import struct
-    
 
 username = "ezou149"
 password = "emzoo16_844010534"
@@ -89,23 +83,26 @@ def privatemessage(message, signing_key, headers, target_username):
     time_str = str(time.time())
     target_ip = get_ip_from_username(target_username,headers)
     target_pubkey_str = get_pubkey_from_username(target_username,headers)
+
+    print("target ip: " + target_ip)
+    print("target pubkey: "+ target_pubkey_str)
     
-    database.add_message(server.get_currentusername(), target_username, message, time_str)
-    
-    url = "http://"+ target_ip +"/api/rx_privatemessage"
+    url = "http://"+ target_ip  +"/api/rx_privatemessage"
     certificate = serverFunctions.get_loginserver_record(headers)
 
+    #Turn the string of the target pubkey into an actual pubkey. Then convert it to curve.
     target_pubkey = nacl.signing.VerifyKey(target_pubkey_str, encoder=nacl.encoding.HexEncoder) 
     target_pubkey_curve = target_pubkey.to_curve25519_public_key()
 
+     #Create a sealed_box with the target public key
     sealed_box = nacl.public.SealedBox(target_pubkey_curve)
     encrypted = sealed_box.encrypt(bytes(message,encoding='utf-8'), encoder=nacl.encoding.HexEncoder)
     encrypted_str = encrypted.decode('utf-8')
 
-    message_bytes = bytes(certificate + target_pubkey_str + "admin" + encrypted_str 
+    signature_bytes = bytes(certificate + target_pubkey_str + target_username + encrypted_str 
     + time_str, encoding='utf-8')
 
-    signed = signing_key.sign(message_bytes, encoder=nacl.encoding.HexEncoder)
+    signed = signing_key.sign(signature_bytes, encoder=nacl.encoding.HexEncoder)
     signature_hex_str = signed.signature.decode('utf-8')
 
     payload = {
@@ -121,20 +118,29 @@ def privatemessage(message, signing_key, headers, target_username):
 
     try:
         req = urllib.request.Request(url, data=json_bytes, headers= headers)
+        print("inside private message")
         response = urllib.request.urlopen(req, timeout=2)
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
+        database.add_message(username,target_username, message, time_str)
+        JSON_object = json.loads(data.decode(encoding))
+
+        print(JSON_object)
+        return 0
     except urllib.error.HTTPError as error:
         print(error.read())
+        return 1
     except ConnectionResetError:
         print("connection reset error")
+        return 1
     except OSError as error:
         print("socket connection reset error")
+        return 1
     except socket.timeout as error:
         print("timed out")
-    JSON_object = json.loads(data.decode(encoding))
-    print(JSON_object)
+        return 1
+    
 
 """
 Checks if another client is alive.
@@ -147,7 +153,7 @@ def ping_check(target_ip_address):
     payload = {
     "my_time": time_str,
     "my_active_usernames": username,
-    "connection_address": "172.23.1.134:8080",
+    "connection_address": server.get_lan_ip() + ":8080",
     "connection_location": 2
     }
 
@@ -208,15 +214,19 @@ def groupmessage():
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
+
     except urllib.error.HTTPError as error:
         print(error.read())
-        exit()
+        
     except ConnectionResetError:
         print("connection reset error")
+       
     except OSError as error:
         print("socket connection reset error")
+      
     except socket.timeout as error:
         print("timed out")
+       
     JSON_object = json.loads(data.decode(encoding))
     print(JSON_object)
 
@@ -309,8 +319,8 @@ def get_pubkey_from_username(target_username,headers):
 
 def get_onlineusernames(headers):
     #ping_check all users online and get IPs that are successful
-    availableIPs = ping_all_online(headers)
-    print(len(availableIPs))
+    #availableIPs = ping_all_online(headers)
+    #print(len(availableIPs))
     online_users = serverFunctions.list_users(headers)
 
     formattedUsers = []

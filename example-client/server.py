@@ -91,6 +91,7 @@ class MainApp(object):
 
         template = env.get_template('privatemessage.html')
         if sender_username != None:
+            print(sender_username)
             past_messages_database = database.get_messages_from(username,sender_username)
             return template.render(onlineusers = current_onlineusers, 
             pastmessages = past_messages_database, currentuser = sender_username)
@@ -116,9 +117,11 @@ class MainApp(object):
     @cherrypy.expose
     def check_privatemessage(self, message):
         serverFunctions.ping(pubkey_hex_str,signing_key, headers)
-        clientFunctions.privatemessage(message, signing_key, headers, current_selected_user)
+        print("current selected user " + current_selected_user)
+        error = clientFunctions.privatemessage(message, signing_key, headers, current_selected_user)
+    
         raise cherrypy.HTTPRedirect('/privatemessage.html')
-
+      
     # LOGGING IN AND OUT
     @cherrypy.expose
     def signin(self, username_given=None, password_given=None):
@@ -211,7 +214,6 @@ class ApiApp(object):
         certificate = cherrypy.request.json["loginserver_record"]
         broadcast_username = certificate[0:7]
         database.add_broadcast(broadcast_username,message,time)
-    
         return {'response': 'ok'}
         
     @cherrypy.expose
@@ -220,22 +222,30 @@ class ApiApp(object):
     def rx_privatemessage(self):
         print("privatemessage api called")
         target_username = cherrypy.request.json["target_username"]
+        print(target_username)
+        
         target_pubkey = cherrypy.request.json["target_pubkey"]
+        print(target_pubkey)
+
+        print("actual: " + pubkey_hex_str)
+        print("")
 
         if(username == target_username and pubkey_hex_str == target_pubkey):
+            print("inside if")
             certificate = cherrypy.request.json["loginserver_record"]
             sender_username = certificate[0:7]
+            try:
+                private_key_curve = signing_key.to_curve25519_private_key()
+                unseal_box = SealedBox(private_key_curve)
 
-            private_key_curve = target_pubkey.to_curve25519_private_key()
-            unseal_box = SealedBox(private_key_curve)
-
-            message_encrypted = cherrypy.request.json["encrypted_message"]
-            message_decrypted = unseal_box.decrypt(message_encrypted)
-            message = message_decrypted.decode('utf-8')
-
-            database.add_message(username,sender_username,message,time)
-            return {'response': 'not decrypted'}
-
+                message_encrypted = bytes(cherrypy.request.json["encrypted_message"], encoding='utf-8')
+                message_decrypted = unseal_box.decrypt(message_encrypted)
+                message = message_decrypted.decode('utf-8')
+                print("got to message")
+                database.add_message(username,sender_username,message,time)
+            except nacl.exceptions.CryptoError:
+                return {'response': 'not decrypted'}
+                
         return {'response': 'ok'}   
 
     @cherrypy.expose
