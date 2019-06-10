@@ -15,37 +15,36 @@ from jinja2 import Environment, FileSystemLoader
 from nacl.public import PrivateKey, SealedBox
 import os
 
-if os.name != "nt":
-    import fcntl
-    import struct
 
-
-startHTML = "<html><head><title>CS302 example</title><link rel='stylesheet' href='/static/style.css' /></head><body>"
+"""startHTML = "<html><head><title>CS302 example</title><link rel='stylesheet' href='/static/style.css' /></head><body>"
 
 hex_key = b'e278c1106318479da40b17ea4376710e11eb16c3e2a7854b2de9287ae4ed9a08'
 signing_key = nacl.signing.SigningKey(hex_key, encoder=nacl.encoding.HexEncoder)
 
 pubkey_hex = signing_key.verify_key.encode(encoder=nacl.encoding.HexEncoder)
-pubkey_hex_str = pubkey_hex.decode('utf-8')
+pubkey_hex_str = pubkey_hex.decode('utf-8')"""
 
 CUR_DIR = os.path.dirname(os.path.abspath(__file__))
 env=Environment(loader=FileSystemLoader(CUR_DIR), trim_blocks=True)
 
-username = "ezou149"
-password = "emzoo16_844010534"
+username = None
+password = None
 
-#username = None
-#password = None
+signing_key = None
+pubkey = None
+pubkey_hex_str = None
 
-connection_location = 1
-#create HTTP BASIC authorization header
 credentials = ('%s:%s' % (username, password))
 b64_credentials = base64.b64encode(credentials.encode('ascii'))
 
 headers = {
-    'Authorization': 'Basic %s' % b64_credentials.decode('ascii'),
-    'Content-Type' : 'application/json; charset=utf-8',
-}
+            'Authorization': 'Basic %s' % b64_credentials.decode('ascii'),
+            'Content-Type' : 'application/json; charset=utf-8',
+        }
+
+
+connection_location = 2
+
 
 current_onlineusers = None
 current_selected_user = None
@@ -159,13 +158,40 @@ class MainApp(object):
 ### Functions only after here
 ###
 def authoriseUserLogin(username_given = None, password_given = None):
-    print("Log on attempt from {0}:{1}".format(username, password))
+    print("Log on attempt from {0}:{1}".format(username_given, password_given))
 
-    if (username.lower() == username_given) and (password.lower() == password_given):
-        #Generate a public key
+    credentials = ('%s:%s' % (username_given, password_given))
+    b64_credentials = base64.b64encode(credentials.encode('ascii'))
+
+    test_headers = {
+        'Authorization': 'Basic %s' % b64_credentials.decode('ascii'),
+        'Content-Type' : 'application/json; charset=utf-8',
+    }
+    response = serverFunctions.ping(None, signing_key, test_headers)
+
+    print(response)
+    if response["authentication"] == 'basic' or response["authentication"] == 'api-key':
+        global username
+        global password
+        username = username_given
+        password = password_given
+
+        global signing_key
+        signing_key = nacl.signing.SigningKey.generate()
+        global pubkey 
+        pubkey = signing_key.verify_key.encode(encoder=nacl.encoding.HexEncoder)
+        global pubkey_hex_str
+        pubkey_hex_str = pubkey.decode('utf-8')
+        
+        global headers
+        headers = test_headers
+
+        serverFunctions.add_pubkey(pubkey_hex_str,signing_key,username,headers)
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
         serverFunctions.report(pubkey_hex_str,headers,"online")
         serverFunctions.get_loginserver_record(headers)
+        clientFunctions.ping_all_online(headers)
+        print(pubkey_hex_str)
         #serverFunctions.add_privatedata("Hello",headers,signing_key, "1234")
         #serverFunctions.get_privatedata(headers,signing_key)
         print("Success")
@@ -189,6 +215,9 @@ def get_currentusername():
 
 def get_listenport():
     return listen_port
+
+def get_username():
+    return username
 
 class ApiApp(object):
 

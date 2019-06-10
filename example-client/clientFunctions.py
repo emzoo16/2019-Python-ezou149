@@ -14,17 +14,6 @@ import database
 import server
 import socket
 
-username = "ezou149"
-password = "emzoo16_844010534"
-
-#create HTTP BASIC authorization header
-credentials = ('%s:%s' % (username, password))
-b64_credentials = base64.b64encode(credentials.encode('ascii'))
-
-headers = {
-    'Authorization': 'Basic %s' % b64_credentials.decode('ascii'),
-    'Content-Type' : 'application/json; charset=utf-8',
-}
 
 """----------------------------------------------------------------------------------
                                 POST METHODS
@@ -124,7 +113,7 @@ def privatemessage(message, signing_key, headers, target_username):
         JSON_object = json.loads(data.decode(encoding))
         print(JSON_object)
         if (JSON_object == {'response': 'ok'}):
-            database.add_message(username,target_username, message, time_str)
+            database.add_message(server.get_username(),target_username, message, time_str)
             print("added to the database")
             return "0"
     except urllib.error.HTTPError as error:
@@ -148,14 +137,14 @@ def privatemessage(message, signing_key, headers, target_username):
 """
 Checks if another client is alive.
 """
-def ping_check(target_ip_address):
+def ping_check(target_ip_address,headers):
     print("ping checking: " + target_ip_address)
     url = "http://"+ target_ip_address+ "/api/ping_check"
     time_str = str(time.time())
 
     payload = {
     "my_time": time_str,
-    "my_active_usernames": username,
+    "my_active_usernames": server.get_username(),
     "connection_address": socket.gethostbyname(socket.gethostname()) + ":10010",
     "connection_location": 2
     }
@@ -186,9 +175,9 @@ def ping_check(target_ip_address):
 
 def ping_all_online(headers):
     availableIPs = []
-    userIPs = getUserIPs()
+    userIPs = getUserIPs(headers)
     for ip in userIPs:
-        return_data = ping_check(ip)
+        return_data = ping_check(ip,headers)
         if(return_data != "error here"):
             availableIPs.append(ip)
             print("this ip is okay: " + ip )
@@ -286,8 +275,11 @@ def checkmessages():
     print(JSON_object)
     return JSON_object;
 
+"""----------------------------------------------------------------------------------
+                                  HELPER FUNCTIONS
+-----------------------------------------------------------------------------------"""    
 
-def getUserIPs():
+def getUserIPs(headers):
     userIPs = []
     online_users = serverFunctions.list_users(headers)
     users = online_users["users"]
@@ -327,8 +319,6 @@ def get_onlineusernames(headers):
     users = online_users["users"]
     print(len(users))
 
-    #For all the users that are online, loop through the users that are online and check if their
-    #ip address available
     for user in users:
         userString = user["username"]
         formattedUsers.append(userString)

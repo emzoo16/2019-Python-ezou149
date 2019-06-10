@@ -21,13 +21,13 @@ Checks if the server is online and the users authentication. Returns an ok messa
 def ping (pubkey_hex_str, signing_key, headers):
     url = "http://cs302.kiwi.land/api/ping"
 
-    signature_bytes = bytes(pubkey_hex_str, encoding='utf-8')
-    signed = signing_key.sign(signature_bytes, encoder=nacl.encoding.HexEncoder)
-    signature_hex_str = signed.signature.decode('utf-8')
-
     if pubkey_hex_str == None :
          payload = {}
     else:
+        signature_bytes = bytes(pubkey_hex_str, encoding='utf-8')
+        signed = signing_key.sign(signature_bytes, encoder=nacl.encoding.HexEncoder)
+        signature_hex_str = signed.signature.decode('utf-8')
+        
         payload = {
             "pubkey": pubkey_hex_str,
             "signature": signature_hex_str
@@ -46,6 +46,7 @@ def ping (pubkey_hex_str, signing_key, headers):
         exit()
 
     JSON_object = json.loads(data.decode(encoding))
+    return(JSON_object)
 
 """
 Associates a new public key with your account.
@@ -62,6 +63,7 @@ def add_pubkey(pubkey_hex_str, signing_key, username, headers):
     "username": username,
     "signature": signature_hex_str
     }
+
     #Convert the python dictionary into a JSON object.
     json_bytes = json.dumps(payload).encode('utf-8')
     try:
