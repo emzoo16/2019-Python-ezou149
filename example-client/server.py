@@ -34,6 +34,9 @@ env=Environment(loader=FileSystemLoader(CUR_DIR), trim_blocks=True)
 username = "ezou149"
 password = "emzoo16_844010534"
 
+#username = None
+#password = None
+
 connection_location = 1
 #create HTTP BASIC authorization header
 credentials = ('%s:%s' % (username, password))
@@ -78,7 +81,9 @@ class MainApp(object):
     @cherrypy.expose
     def dashboard(self):
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
+        print("refresh pinged")
         serverFunctions.report(pubkey_hex_str,headers,"online")
+        print("refresh report")
         template = env.get_template('dashboard.html')
         broadcasts = database.get_all_broadcasts()
         return template.render(onlineusers = getUsers(), username = username, 
@@ -86,6 +91,10 @@ class MainApp(object):
     
     @cherrypy.expose
     def changeMessagePage(self, sender_username = None, error = "0"):
+        print("refreshed ping in change pm")
+        serverFunctions.ping(pubkey_hex_str, signing_key, headers)
+        print("refreshed reprt in change pm")
+        serverFunctions.report(pubkey_hex_str,headers,"online")
         global current_selected_user
         current_selected_user = sender_username
 
@@ -120,6 +129,8 @@ class MainApp(object):
             print("current selected user " + current_selected_user)
             message_error = clientFunctions.privatemessage(message, signing_key, headers, current_selected_user)
             raise cherrypy.HTTPRedirect('/changeMessagePage?sender_username='+ current_selected_user+ "&error="+message_error)
+        else:
+            raise cherrypy.HTTPRedirect('/changeMessagePage')
       
     # LOGGING IN AND OUT
     @cherrypy.expose
@@ -141,6 +152,7 @@ class MainApp(object):
             pass
         else:
             cherrypy.lib.sessions.expire()
+            username = None
         raise cherrypy.HTTPRedirect('/')
 
 ###
@@ -148,6 +160,7 @@ class MainApp(object):
 ###
 def authoriseUserLogin(username_given = None, password_given = None):
     print("Log on attempt from {0}:{1}".format(username, password))
+
     if (username.lower() == username_given) and (password.lower() == password_given):
         #Generate a public key
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
@@ -221,7 +234,12 @@ class ApiApp(object):
     def rx_privatemessage(self):
         print("privatemessage api called")
         target_username = cherrypy.request.json["target_username"]
+        print("received: " + target_username)
+        print("actual: " + username)
         target_pubkey = cherrypy.request.json["target_pubkey"]
+        print("received: " + target_pubkey)
+        print("actual: " + pubkey_hex_str)
+        time_str = str(time.time())
       
         if(username == target_username and pubkey_hex_str == target_pubkey):
 
@@ -231,14 +249,16 @@ class ApiApp(object):
                 private_key_curve = signing_key.to_curve25519_private_key()
                 unseal_box = SealedBox(private_key_curve)
                 message_encrypted = bytes(cherrypy.request.json["encrypted_message"], encoding='utf-8')
-                print("message encrypted 1" + str(message_encrypted))
                 message_decrypted = unseal_box.decrypt(message_encrypted, encoder=nacl.encoding.HexEncoder)
-                print("message encrypted" + message_encrypted)
                 message = message_decrypted.decode('utf-8')
-                database.add_message(username,sender_username,message,time)
+                print(message)
+                database.add_message(username,sender_username,message,time_str)
+                raise cherrypy.HTTPRedirect('/changeMessagePage?sender_username='+ current_selected_user+ "&error='0'")
                 return {'response': 'ok'}   
             except nacl.exceptions.CryptoError:
                 return {'response': 'not decrypted'}
+
+        return {'response': 'wrong target user'}
 
 
     @cherrypy.expose

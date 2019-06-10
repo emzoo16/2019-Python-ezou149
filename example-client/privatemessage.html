@@ -2,6 +2,7 @@
 <html>
     <head>
         <title> Cool Social Media Application </title>
+        <meta http-equiv="refresh" content="60" >
         <link rel = "stylesheet" href="static/style-message.css" >
         <script src="https://ajax.googleapis.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
     </head>
@@ -25,7 +26,7 @@
             {% endif %}
     
             <div class= "messages-box">
-                <div class= "messages" style="overflow-y: scroll" >
+                <div class= "messages">
                     <ul class = "message-boxes" >
                     {% for message in pastmessages %}
                     <li class="user">{{message}}</li>

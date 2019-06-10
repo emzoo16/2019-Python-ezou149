@@ -24,10 +24,13 @@ def ping (pubkey_hex_str, signing_key, headers):
     signed = signing_key.sign(signature_bytes, encoder=nacl.encoding.HexEncoder)
     signature_hex_str = signed.signature.decode('utf-8')
 
-    payload = {
-        "pubkey": pubkey_hex_str,
-        "signature": signature_hex_str
-    }
+    if pubkey_hex_str == None :
+         payload = {}
+    else:
+        payload = {
+            "pubkey": pubkey_hex_str,
+            "signature": signature_hex_str
+        }
     #Convert the python dictionary into a JSON object.
     json_bytes = json.dumps(payload).encode('utf-8')
 
