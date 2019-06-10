@@ -16,7 +16,7 @@
 
     <div class = "wrap">
            
-        <div class = "main-content-message" style = "overflow-y: scroll">
+        <div class = "main-content-message" >
             <div class= "message-box">
                 <div class= username-message>
                     <h3 id= "currentuser" name= "currentuser"> {{currentuser}}</h3>
@@ -25,14 +25,12 @@
             <p id= error-message >Error: could not send message</p>
             {% endif %}
     
-            <div class= "messages-box">
-                <div class= "messages">
+            <div id= "messages-from" style = "overflow-y: scroll">
                     <ul class = "message-boxes" >
                     {% for message in pastmessages %}
                     <li class="user">{{message}}</li>
                     {% endfor %}  
                     </ul>
-                </div>
             </div>
 
             <div class=send-message>
@@ -62,14 +60,36 @@
         </div>
 
         <div class="sidebar-message" style="overflow-y: scroll">
-            <form><input class= "btn" type="submit" value="New Message"></form>
+            <input type="text" id="input" onkeyup="myFunction()" placeholder="Search for users..">
            
-            <ul class = "past-messages">
+            <ul class = "past-messages" id = "privatemessageUL">
                 {% for user in onlineusers %}
                 <li class="user"><a class = "message-link" href="/changeMessagePage?sender_username={{user}}" >
                     {{user}}</a></li>
                 {% endfor %}
             </ul>
+
+            <script>
+                    function myFunction() {
+                    // Declare variables
+                    var input, filter, ul, li, a, i, txtValue;
+                    input = document.getElementById('input');
+                    filter = input.value.toUpperCase();
+                    ul = document.getElementById("privatemessageUL");
+                    li = ul.getElementsByTagName('li');
+        
+                    // Loop through all list items, and hide those who don't match the search query
+                    for (i = 0; i < li.length; i++) {
+                        a = li[i].getElementsByTagName("a")[0];
+                        txtValue = a.textContent || a.innerText;
+                        if (txtValue.toUpperCase().indexOf(filter) > -1) {
+                        li[i].style.display = "";
+                        } else {
+                        li[i].style.display = "none";
+                        }
+                    }
+                    }
+            </script>
     
             </div>
         </div>

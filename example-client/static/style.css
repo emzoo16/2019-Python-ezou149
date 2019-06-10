@@ -11,6 +11,10 @@ body{
     background:#3F3F3F;
 }
 
+#online-users {
+    list-style: none;
+}
+
 #error-message {
     color:red
 }

@@ -83,9 +83,9 @@
                 <button class = "btn" type="submit">Private Message</button>
             </form>
         
-            <div class = "online-user-box">
+            <div id= "online-user-box">
                 <h3>Online Users</h3>
-                <ul class = "online-users">
+                <ul id = "online-users">
                     {% for users in onlineusers %}
                     <li class="user-item">{{users}}</li>
                     {% endfor %}

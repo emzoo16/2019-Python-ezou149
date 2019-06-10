@@ -57,15 +57,26 @@ body{
     margin:0 auto;
 }
 
-.messages-box {
+#input {
+    font-size: 16px; 
+    width: 170px;
+    padding: 12px 20px 12px 40px; 
+    border: 1px solid #ddd; 
+    margin-top: 10px;
+    margin-bottom: 25px; 
+}
+#messages-from {
     background-color: #ffffff;
-    height: 72%;
+    height: 600px;
     box-shadow: 0px 0px 15px #DDDDDD;
 }
 
+#error-message {
+    color:red
+}
 .sidebar-message {
     width: 26%;
-    height: 650px;;
+    height: 750px;
     background-color:#FFFFFF;
     float:left;
     text-align: center;
@@ -84,7 +95,7 @@ body{
 
 .main-content-message {
     width:73%;
-    height: 80%;
+    height: 750px;
     background-color: #F6F2EF;
     float:right;
     text-align: center;
@@ -110,6 +121,10 @@ body{
     padding: 0;
     margin: 0;
     list-style-type: none;
+}
+
+#messages-from {
+
 }
 
 .message-boxes .user-darker {

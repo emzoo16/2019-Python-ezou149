@@ -34,8 +34,7 @@ headers = {
 Broadcast between users (public message)
 """
 def broadcast(message, signing_key, headers):
-    #availableIPs = ping_all_online()
-
+    
     certificate = serverFunctions.get_loginserver_record(headers)
     time_str = str(time.time())
     message_bytes = bytes(certificate + message + time_str, encoding='utf-8')
