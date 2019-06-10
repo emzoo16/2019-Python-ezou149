@@ -79,6 +79,7 @@ class MainApp(object):
 
     @cherrypy.expose
     def dashboard(self):
+        print("username + password " + username + password)
         serverFunctions.ping(pubkey_hex_str, signing_key, headers)
         print("refresh pinged")
         serverFunctions.report(pubkey_hex_str,headers,"online")
@@ -111,6 +112,10 @@ class MainApp(object):
     def privateMessage(self, error = "0"):
         global current_onlineusers
         current_onlineusers = clientFunctions.get_onlineusernames(headers)
+
+        serverFunctions.ping(pubkey_hex_str, signing_key, headers)
+        serverFunctions.report(pubkey_hex_str,headers,"online")
+
         template = env.get_template('privatemessage.html')
         return template.render(onlineusers = current_onlineusers, 
             pastmessages = "", error = error)
