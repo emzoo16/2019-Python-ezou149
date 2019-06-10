@@ -74,16 +74,17 @@ def broadcast(message, signing_key, headers):
             print("socket connection reset error")
         except socket.timeout as error:
             print("timed out")
-        
-            #return 'error'
-        #JSON_object = json.loads(data.decode(encoding))
+        except json.decoder.JSONDecodeError as error:
+            print("decode error")
+    
 
 def privatemessage(message, signing_key, headers, target_username):
     time_str = str(time.time())
     target_ip = get_ip_from_username(target_username,headers)
     target_pubkey_str = get_pubkey_from_username(target_username,headers)
+    print("inside report target ip: " + target_ip)
     
-    url = "http://"+ target_ip  +"/api/rx_privatemessage"
+    url = "http://"+ target_ip +"/api/rx_privatemessage"
     certificate = serverFunctions.get_loginserver_record(headers)
 
     #Turn the string of the target pubkey into an actual pubkey. Then convert it to curve.
@@ -119,10 +120,12 @@ def privatemessage(message, signing_key, headers, target_username):
         data = response.read() # read the received bytes
         encoding = response.info().get_content_charset('utf-8') #load encoding if possible (default to utf-8)
         response.close()
+        print(str(data))
         JSON_object = json.loads(data.decode(encoding))
         print(JSON_object)
         if (JSON_object == {'response': 'ok'}):
             database.add_message(username,target_username, message, time_str)
+            print("added to the database")
             return "0"
     except urllib.error.HTTPError as error:
         print(error.read())
@@ -135,6 +138,9 @@ def privatemessage(message, signing_key, headers, target_username):
         return "1"
     except socket.timeout as error:
         print("timed out")
+        return "1"
+    except json.decoder.JSONDecodeError as error:
+        print("decode error")
         return "1"
     return "1"
     
@@ -150,7 +156,7 @@ def ping_check(target_ip_address):
     payload = {
     "my_time": time_str,
     "my_active_usernames": username,
-    "connection_address": server.get_lan_ip() + ":8080",
+    "connection_address": socket.gethostbyname(socket.gethostname()) + ":10010",
     "connection_location": 2
     }
 
@@ -315,9 +321,6 @@ def get_pubkey_from_username(target_username,headers):
             return info
 
 def get_onlineusernames(headers):
-    #ping_check all users online and get IPs that are successful
-    #availableIPs = ping_all_online(headers)
-    #print(len(availableIPs))
     online_users = serverFunctions.list_users(headers)
 
     formattedUsers = []
@@ -327,8 +330,6 @@ def get_onlineusernames(headers):
     #For all the users that are online, loop through the users that are online and check if their
     #ip address available
     for user in users:
-        #for ip in availableIPs:
-            #if user["connection_address"] == ip:
         userString = user["username"]
         formattedUsers.append(userString)
 

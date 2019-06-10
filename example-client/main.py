@@ -21,14 +21,9 @@ import urllib.request
 import os
 import socket
 
-if os.name != "nt":
-    import fcntl
-    import struct
-
-
 # The address we listen for connections on
-LISTEN_IP = server.get_lan_ip()
-LISTEN_PORT = 8080
+LISTEN_IP = socket.gethostbyname(socket.gethostname()) 
+LISTEN_PORT = 10010
 
 def runMainApp():
     #set up the config

@@ -184,36 +184,11 @@ def getUsers():
         formattedUsers.append(userString)
     return formattedUsers
 
-def get_interface_ip(ifname):
-    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-    return socket.inet_ntoa(fcntl.ioctl(s.fileno(), 0x8915, struct.pack('256s',
-                            ifname[:15]))[20:24])
-
-def get_lan_ip():
-    ip = socket.gethostbyname(socket.gethostname())
-    if ip.startswith("127.") and os.name != "nt":
-        interfaces = [
-            "eth0",
-            "eth1",
-            "eth2",
-            "wlan0",
-            "wlan1",
-            "wifi0",
-            "ath0",
-            "ath1",
-            "ppp0",
-            ]
-        for ifname in interfaces:
-            try:
-                ip = get_interface_ip(ifname)
-                break
-            except IOError:
-                pass
-    print(ip)
-    return ip
-
 def get_currentusername():
     return current_selected_user
+
+def get_listenport():
+    return listen_port
 
 class ApiApp(object):
 
@@ -253,7 +228,6 @@ class ApiApp(object):
                 message = message_decrypted.decode('utf-8')
                 print(message)
                 database.add_message(username,sender_username,message,time_str)
-                raise cherrypy.HTTPRedirect('/changeMessagePage?sender_username='+ current_selected_user+ "&error='0'")
                 return {'response': 'ok'}   
             except nacl.exceptions.CryptoError:
                 return {'response': 'not decrypted'}
@@ -266,7 +240,6 @@ class ApiApp(object):
     @cherrypy.tools.json_in()
     def ping_check(self):
         time_str = str(time.time())
-        #Store recieved information in a list?
         return_body = { "response": "ok",
                         "my_time": time_str,
                         "my_active_usernames": username}
